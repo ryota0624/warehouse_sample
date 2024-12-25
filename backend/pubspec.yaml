@@ -1,0 +1,33 @@
+name: backend
+description: A sample command-line application.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.5.4
+
+# Add regular dependencies here.
+dependencies:
+  # path: ^1.8.0
+  event_schema: 0.0.0
+  dart_firebase_admin: ^0.4.0
+  meta: ^1.16.0
+  clock: ^1.1.2
+  fpdart: ^1.1.1
+  crypto: ^3.0.6
+  http: ^1.2.2
+  protobuf: ^3.1.0
+
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.24.0
+
+dependency_overrides:
+  event_schema: 
+    path: ./event_schema/dart
+  dart_firebase_admin:
+    git:
+      url: https://github.com/ryota0624/dart_firebase_admin
+      path: packages/dart_firebase_admin
+      ref: bd4762dfe7f788831f941f6c9c3eb4da08cc47dd

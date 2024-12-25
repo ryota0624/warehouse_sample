@@ -1,0 +1,16 @@
+syntax = "proto3";
+package serverpod_app.event.v1;
+
+import "google/protobuf/timestamp.proto";
+
+message EventPublishSource {
+    string aggregate_root_id = 1;
+    string aggregate_root_type = 2;
+    uint32 aggregate_root_version = 3;
+}
+
+message EventHeader {
+    EventPublishSource publish_source = 1;
+    google.protobuf.Timestamp occurrence_time = 2;
+    string correlation_id = 3;
+}
