@@ -1,3 +1,1 @@
-abstract interface class RepositoryTx {
-}
-
+abstract interface class RepositoryTx {}

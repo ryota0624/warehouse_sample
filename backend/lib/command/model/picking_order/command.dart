@@ -23,7 +23,9 @@ class CancelPickingOrder extends PickingOrderCommand {
 }
 
 sealed class PickingOrderCommandError {}
+
 class PickingOrderAlreadyReceived implements PickingOrderCommandError {}
 
 class PickingOrderAlreadyCancelled implements PickingOrderCommandError {}
+
 class PickingOrderNotFound implements PickingOrderCommandError {}

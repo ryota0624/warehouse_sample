@@ -5,8 +5,9 @@ import 'package:backend/event_store/event/event.dart';
 import 'package:backend/event_store/event/event_publish_source.dart';
 import 'package:backend/event_store/event_store.dart';
 import 'package:crypto/crypto.dart';
-import 'package:dart_firebase_admin/firestore.dart';
+import 'package:dart_firebase_admin/firestore.dart' hide Timestamp;
 import 'package:backend/event_store/event/event_header.dart';
+import 'package:event_schema/google/protobuf/timestamp.pb.dart';
 
 class EventPersistenceTxForFirestore implements EventPersistenceTransaction {
   final Transaction _firestoreTx;
@@ -56,7 +57,8 @@ class EventStoreOnFirestore implements EventStore {
           descending: false,
         )
         .withConverter<PreDecodeEvent>(
-          fromFirestore: _PreDecodeEvent.fromSnapshot,
+          fromFirestore: (s) =>
+              PreDecodeEventOnFirestore.fromDocument(s.data()),
           toFirestore: (_) {
             throw UnimplementedError();
           },
@@ -89,23 +91,21 @@ class EventStoreOnFirestore implements EventStore {
   }
 }
 
-class _PreDecodeEvent implements PreDecodeEvent {
-  final DocumentSnapshot<Map<String, dynamic>> _snapshot;
+class PreDecodeEventOnFirestore implements PreDecodeEvent {
+  final Map<String, dynamic> _document;
   @override
   final EventHeader header;
 
-  _PreDecodeEvent.fromSnapshot(DocumentSnapshot<Map<String, dynamic>> snapshot)
-      : _snapshot = snapshot,
+  PreDecodeEventOnFirestore.fromDocument(Map<String, dynamic> document)
+      : _document = document,
         header = EventHeader(
           EventPublishSource(
-            aggregateRootId: snapshot.data()!['aggregateRootId'],
-            aggregateRootType: snapshot.data()!['aggregateRootType'],
-            aggregateRootVersion: snapshot.data()!['aggregateRootVersion'],
+            aggregateRootId: document['aggregateRootId'],
+            aggregateRootType: document['aggregateRootType'],
+            aggregateRootVersion: document['aggregateRootVersion'],
           ),
-          CorrelationId(snapshot.data()!['correlationId']),
-          DateTime.fromMillisecondsSinceEpoch(
-            (snapshot.data()!['occurrenceTime'] as Timestamp).seconds * 1000,
-          ),
+          CorrelationId(document['correlationId']),
+          (document['occurrenceTime'] as Timestamp).toDateTime(),
         );
 
   @override
@@ -115,7 +115,7 @@ class _PreDecodeEvent implements PreDecodeEvent {
   ) {
     return fromHeaderAndPayload(
       header,
-      _snapshot.data()!['payload'],
+      _document['payload'],
     );
   }
 }

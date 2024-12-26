@@ -10,7 +10,7 @@ import 'package:backend/event_store/event/event_publish_source.dart';
 import 'package:backend/event_store/firestore/event_store.dart';
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:event_schema/serverpod_app/event/picking_order/v1/picking_order.pb.dart'
+import 'package:event_schema/warehouse_sample/event/picking_order/v1/picking_order.pb.dart'
     as pb;
 
 class PickingOrderRepositoryOnFirestore implements PickingOrderRepository {

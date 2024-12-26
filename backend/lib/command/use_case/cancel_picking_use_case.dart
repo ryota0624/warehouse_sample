@@ -1,5 +1,4 @@
 import 'package:backend/command/model/picking/repository.dart';
-import 'package:backend/command/model/repository_tx.dart';
 import 'package:backend/command/use_case/use_case_transaction.dart';
 import 'package:clock/clock.dart';
 import 'package:fpdart/fpdart.dart';

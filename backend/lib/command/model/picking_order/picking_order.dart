@@ -95,6 +95,7 @@ class PickingOrder
 
   @override
   PickingOrder apply(PickingOrderEvent event) {
+    assert(event.header.pickingOrderVersion == _version + 1);
     switch (event) {
       case PickingOrderReceived():
         throw StateError('PickingOrder is already received');
@@ -164,7 +165,8 @@ class PickingOrder
       isCancelled: json['isCancelled'],
       version: json['version'],
       pickingOrderId: json['pickingOrderId'],
-      orderedPickingIds: (json['orderedPickingIds'] as List<Object?>).cast<String>(),
+      orderedPickingIds:
+          (json['orderedPickingIds'] as List<Object?>).cast<String>(),
     );
   }
 }

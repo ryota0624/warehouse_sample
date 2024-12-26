@@ -1,8 +1,8 @@
 import 'package:backend/command/model/picking_order/event.dart';
 import 'package:event_schema/google/protobuf/timestamp.pb.dart';
-import 'package:event_schema/serverpod_app/event/picking_order/v1/picking_order.pb.dart'
+import 'package:event_schema/warehouse_sample/event/picking_order/v1/picking_order.pb.dart'
     as pb;
-import 'package:event_schema/serverpod_app/event/v1/header.pb.dart' as pb;
+import 'package:event_schema/warehouse_sample/event/v1/header.pb.dart' as pb;
 
 class PickingOrderEventTranslate {
   PickingOrderEvent fromProtoToModel(pb.PickingOrderEvent proto) {
