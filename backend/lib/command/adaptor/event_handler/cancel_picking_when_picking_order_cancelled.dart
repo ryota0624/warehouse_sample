@@ -26,32 +26,6 @@ class CancelPickingWhenPickingOrderCancelled
   @override
   Future<void> handleEvent(PickingOrderCancelled cancelled) async {
     await TaskEither.traverseList(cancelled.orderedPickingIds, (pickingId) {
-      return TaskEither(() {
-        return runCommandUseCase((ctx) {
-          return _cancelPickingUseCase.execute(
-            ctx.transaction,
-            pickingId,
-            correlationId: ctx.correlationId,
-          );
-        }).run(_runCommandUseCaseDependencies);
-      });
-    }).map((_) => ()).run();
-  }
-
-  Future<void> _handleEvent(PickingOrderCancelled cancelled) async {
-    await runCommandUseCase((ctx) {
-      return TaskEither.traverseList(cancelled.orderedPickingIds, (pickingId) {
-        return _cancelPickingUseCase.execute(
-          ctx.transaction,
-          pickingId,
-          correlationId: ctx.correlationId,
-        );
-      }).map((_) => ());
-    }).run(_runCommandUseCaseDependencies);
-  }
-
-  Future<void> __handleEvent(PickingOrderCancelled cancelled) async {
-    await TaskEither.traverseList(cancelled.orderedPickingIds, (pickingId) {
       return _runCommandUseCase.run(
         (ctx) {
           return _cancelPickingUseCase.execute(
