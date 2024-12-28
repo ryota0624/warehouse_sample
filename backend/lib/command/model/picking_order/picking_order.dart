@@ -1,3 +1,4 @@
+import 'package:backend/command/adaptor/repository/repository_on_firestore.dart';
 import 'package:backend/command/model/aggregate_root.dart';
 import 'package:backend/command/model/picking_order/command.dart';
 import 'package:backend/command/model/picking_order/event.dart';
@@ -8,7 +9,8 @@ import 'package:meta/meta.dart';
 class PickingOrder
     implements
         EventSourcingAggregateRoot<PickingOrderEvent, PickingOrderCommand,
-            PickingOrderCommandError, PickingOrder> {
+            PickingOrderCommandError, PickingOrder>,
+        AggregateRoot<PickingOrderEvent, PickingOrder> {
   final bool _isCancelled;
   final int _version;
   final String pickingOrderId;
@@ -151,7 +153,8 @@ class PickingOrder
     }
   }
 
-  Map<String, dynamic> toJson() {
+  @override
+  Map<String, dynamic> toJsonForSnapshot() {
     return {
       'isCancelled': _isCancelled,
       'version': _version,
@@ -169,4 +172,23 @@ class PickingOrder
           (json['orderedPickingIds'] as List<Object?>).cast<String>(),
     );
   }
+
+  @override
+  PickingOrderId get aggregateRootId => PickingOrderId(pickingOrderId);
+
+  @override
+  AggregateRootVersion get aggregateRootVersion =>
+      AggregateRootVersion(_version);
+}
+
+class PickingOrderId implements AggregateRootId<PickingOrder> {
+  final String _value;
+
+  PickingOrderId(this._value);
+
+  @override
+  String get aggregateRootType => 'PickingOrder';
+
+  @override
+  String get asString => _value;
 }

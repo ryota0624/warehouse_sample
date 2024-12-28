@@ -1,4 +1,5 @@
 import 'package:backend/command/adaptor/proto_translate/picking_order_event_translate.dart';
+import 'package:backend/command/adaptor/repository/repository_on_firestore.dart';
 import 'package:backend/command/adaptor/repository/repository_tx_on_firestore.dart';
 import 'package:backend/command/adaptor/repository/storable_event.dart';
 import 'package:backend/command/model/picking_order/event.dart';
@@ -7,13 +8,20 @@ import 'package:backend/command/model/picking_order/repository.dart';
 import 'package:backend/event_store/event/correlation_id.dart';
 import 'package:backend/event_store/event/event_header.dart';
 import 'package:backend/event_store/event/event_publish_source.dart';
+import 'package:backend/event_store/event_store.dart';
 import 'package:backend/event_store/firestore/event_store.dart';
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:event_schema/warehouse_sample/event/picking_order/v1/picking_order.pb.dart'
     as pb;
 
-class PickingOrderRepositoryOnFirestore implements PickingOrderRepository {
+class PickingOrderRepositoryOnFirestore
+    with
+        AggregateRootRepositoryOnDefaultImpl<PickingOrderEvent,
+            PickingOrder>
+    implements
+        PickingOrderRepository,
+        AggregateRootRepositoryOnFirestore<PickingOrderEvent, PickingOrder> {
   final PickingOrderEventTranslate _eventTranslate;
   final Firestore _firestore;
 
@@ -28,96 +36,78 @@ class PickingOrderRepositoryOnFirestore implements PickingOrderRepository {
   );
 
   @override
-  Task<Option<PickingOrder>> getById(String pickingOrderId, {Transaction? tx}) {
-    final pickingOrder = Task<Option<PickingOrder>>(() async {
+  PickingOrder applyVersion1Event(PickingOrderEvent event) {
+    return PickingOrder(event as PickingOrderReceived);
+  }
+
+  @override
+  PickingOrderEvent decodeEventAsAggregateRootEvent(
+      EventHeader header, Map<String, dynamic> payload) {
+    final protoEvent = pb.PickingOrderEvent()..mergeFromProto3Json(payload);
+    return _eventTranslate.fromProtoToModel(protoEvent);
+  }
+
+  @override
+  EventStoreOnFirestore get eventStore => _eventStore;
+
+  @override
+  StorableEvent eventToStorableEvent(PickingOrderEvent event) {
+    final protoEvent = _eventTranslate.fromModelToProto(event);
+    return StorableEvent.fromProtoMessage(
+      EventHeader(
+        EventPublishSource(
+            aggregateRootId: event.header.pickingOrderId,
+            aggregateRootType: _pickingOrderType,
+            aggregateRootVersion: event.header.pickingOrderVersion),
+        CorrelationId(event.header.correlationId),
+        event.header.occurrenceTime,
+      ),
+      protoEvent,
+    );
+  }
+
+  @override
+  Task<Option<PickingOrder>> getSnapshots(
+    covariant PickingOrderId aggregateRootId, {
+    covariant RepositoryTxOnFirestore? tx,
+  }) {
+    return Task(() async {
       try {
         final pickingOrder = await _firestore
-            .collection(_pickingOrderType)
-            .doc(pickingOrderId)
+            .collection(aggregateRootId.aggregateRootType)
+            .doc(aggregateRootId.asString)
             .withConverter(fromFirestore: (doc) {
           return PickingOrder.fromJson(
             doc.data(),
           );
         }, toFirestore: (_) {
           throw UnimplementedError();
-        }).get(tx: tx);
+        }).get(tx: tx?.firestoreTx);
         return optionOf(pickingOrder.data());
       } on StateError catch (_) {
         return Option.none();
       }
     });
-
-    return pickingOrder.flatMap((pickingOrderOpt) {
-      return Task(() async {
-        final events = await _eventStore.getEventsByAggregateIdSinceVersion(
-          aggregateRootId: pickingOrderId,
-          aggregateRootType: _pickingOrderType,
-          aggregateRootVersion: pickingOrderOpt.map((pickingOrder) {
-            return pickingOrder.version + 1;
-          }).getOrElse(() => 1),
-        );
-
-        final modelEvents = events.map((event) {
-          return event.decode((header, payload) {
-            final protoEvent = pb.PickingOrderEvent()
-              ..mergeFromProto3Json(payload);
-            return _eventTranslate.fromProtoToModel(protoEvent);
-          });
-        }).toList();
-
-        if (modelEvents.isEmpty && pickingOrderOpt.isNone()) {
-          return Option.none();
-        }
-
-        return pickingOrderOpt.fold(() {
-          return Option.of(PickingOrder.fromEvents(modelEvents));
-        }, (pickingOrder) {
-          return Option.of(
-            modelEvents.fold(pickingOrder, (po, e) => po.apply(e)),
-          );
-        });
-      });
-    });
   }
 
   @override
-  Task<()> store(
-    covariant RepositoryTxOnFirestore tx,
-    PickingOrder pickingOrder,
-    List<PickingOrderEvent> events,
-  ) {
-    return Task(() async {
-      final persistEvents = events.map((event) {
-        final protoEvent = _eventTranslate.fromModelToProto(event);
-        return StorableEvent.fromProtoMessage(
-          EventHeader(
-            EventPublishSource(
-                aggregateRootId: event.header.pickingOrderId,
-                aggregateRootType: _pickingOrderType,
-                aggregateRootVersion: event.header.pickingOrderVersion),
-            CorrelationId(event.header.correlationId),
-            event.header.occurrenceTime,
-          ),
-          protoEvent,
-        );
-      }).toList();
+  Task<()> saveSnapshots(
+    PickingOrder aggregateRoot, {
+    required covariant RepositoryTxOnFirestore tx,
+  }) {
+    tx.firestoreTx.set(
+      tx.firestoreTx.firestore
+          .collection(aggregateRoot.aggregateRootId.aggregateRootType)
+          .doc(aggregateRoot.aggregateRootId.asString),
+      aggregateRoot.toJsonForSnapshot(),
+    );
 
-      await Future.wait(persistEvents.map((event) {
-        return _eventStore.persistEvent(
-            EventPersistenceTxForFirestore(
-              tx.firestoreTx,
-            ),
-            event);
-      }));
+    return Task.of(());
+  }
 
-      tx.firestoreTx.set(
-        tx.firestoreTx.firestore
-            .collection(_pickingOrderType)
-            .doc(pickingOrder.pickingOrderId),
-        pickingOrder.toJson(),
-      );
-
-      return ();
-    });
+  @override
+  EventPersistenceTransaction getEventPersistenceTransaction(
+      covariant RepositoryTxOnFirestore tx) {
+    return EventPersistenceTxForFirestore(tx.firestoreTx);
   }
 }

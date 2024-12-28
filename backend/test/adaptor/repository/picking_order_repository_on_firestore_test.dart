@@ -28,9 +28,9 @@ void main() {
       );
     });
     test('version1を永続化できる', () async {
-      final pickingOrderId = Random().nextInt(100000).toString();
+      final pickingOrderId = PickingOrderId(Random().nextInt(100000).toString());
       final (pickingOrder, events) = PickingOrder.receive(
-        pickingOrderId: pickingOrderId,
+        pickingOrderId: pickingOrderId.asString,
         orderedPickingIds: [Random().nextInt(100000).toString()],
         clock: Clock(),
         correlationId: Random().nextInt(100000).toString(),
@@ -48,11 +48,11 @@ void main() {
     });
 
     test('version2以降を永続化できる', () async {
-      final pickingOrderId = Random().nextInt(100000).toString();
+      final pickingOrderId = PickingOrderId(Random().nextInt(100000).toString());
 
       await firestore.runTransaction((tx) async {
         final (pickingOrder, events) = PickingOrder.receive(
-          pickingOrderId: pickingOrderId,
+          pickingOrderId: pickingOrderId.asString,
           orderedPickingIds: [Random().nextInt(100000).toString()],
           clock: Clock(),
           correlationId: Random().nextInt(100000).toString(),
@@ -71,7 +71,7 @@ void main() {
         final (cancelledPickingOrder, events) = pickingOrder
             .process(
           CancelPickingOrder(
-            pickingOrderId: pickingOrderId,
+            pickingOrderId: pickingOrderId.asString,
             correlationId: Random().nextInt(100000).toString(),
           ),
         )

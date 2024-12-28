@@ -5,7 +5,7 @@ import 'package:dart_firebase_admin/firestore.dart';
 import 'package:fpdart/fpdart.dart';
 
 abstract interface class PickingOrderRepository {
-  Task<Option<PickingOrder>> getById(String pickingOrderId, {Transaction? tx});
+  Task<Option<PickingOrder>> getById(PickingOrderId pickingOrderId, {RepositoryTx? tx});
 
   Task<()> store(RepositoryTx tx, PickingOrder pickingOrder,
       List<PickingOrderEvent> events);

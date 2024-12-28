@@ -1,4 +1,5 @@
 import 'package:backend/command/model/picking_order/command.dart';
+import 'package:backend/command/model/picking_order/picking_order.dart';
 import 'package:backend/command/model/picking_order/repository.dart';
 import 'package:clock/clock.dart';
 import 'package:fpdart/fpdart.dart';
@@ -20,7 +21,7 @@ class CancelPickingOrderUseCase {
     required String correlationId,
   }) {
     return _pickingOrderRepository
-        .getById(pickingOrderId)
+        .getById(PickingOrderId(pickingOrderId))
         .toTaskEither<List<PickingOrderCommandError>>()
         .flatMap((pickingOrder) {
       return pickingOrder.fold(
