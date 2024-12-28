@@ -13,13 +13,11 @@ class CancelPickingWhenPickingOrderCancelled
     implements EventHandlerForFirestoreDocument<PickingOrderCancelled> {
   final CancelPickingUseCase _cancelPickingUseCase;
   final PickingOrderEventTranslate _eventTranslate;
-  final RunCommandUseCaseDependencies _runCommandUseCaseDependencies;
   final RunCommandUseCase _runCommandUseCase;
 
   CancelPickingWhenPickingOrderCancelled(
     this._cancelPickingUseCase,
     this._eventTranslate,
-    this._runCommandUseCaseDependencies,
     this._runCommandUseCase,
   );
 
