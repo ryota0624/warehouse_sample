@@ -1,10 +1,10 @@
-import 'package:backend/adaptor/repository/repository_tx_on_firestore.dart';
+import 'package:backend/command/adaptor/repository/repository_tx_on_firestore.dart';
 import 'package:backend/command/model/repository_tx.dart';
-import 'package:backend/command/use_case/use_case_transaction.dart';
+import 'package:backend/command/use_case/command_use_case_transaction.dart';
 import 'package:dart_firebase_admin/firestore.dart';
 import 'package:fpdart/fpdart.dart';
 
-class UseCaseTransactionOnFirestore implements UseCaseTransaction {
+class UseCaseTransactionOnFirestore implements CommandUseCaseTransaction {
   final FirestoreTransaction _firestoreTransaction;
 
   UseCaseTransactionOnFirestore(this._firestoreTransaction);

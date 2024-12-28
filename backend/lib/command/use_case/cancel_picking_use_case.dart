@@ -1,9 +1,11 @@
 import 'package:backend/command/model/picking/repository.dart';
-import 'package:backend/command/use_case/use_case_transaction.dart';
+import 'package:backend/command/use_case/command_use_case_transaction.dart';
 import 'package:clock/clock.dart';
 import 'package:fpdart/fpdart.dart';
 
-import '../model/picking/command.dart';
+import 'package:backend/command/model/picking/command.dart';
+
+import 'command_use_case_error.dart';
 
 class CancelPickingUseCase {
   final PickingRepository _pickingRepository;
@@ -15,22 +17,27 @@ class CancelPickingUseCase {
     this.clock,
   );
 
-  TaskEither<List<dynamic>, ()> execute(
-    UseCaseTransaction transaction,
+  TaskEither<CommandUseCaseError, ()> execute(
+    CommandUseCaseTransaction transaction,
     String pickingId, {
     required String correlationId,
   }) {
     return _pickingRepository
         .getById(pickingId)
-        .toTaskEither<List<PickingCommandError>>(() => [
-              PickingNotFound(),
-            ])
+        .toTaskEither<CommandUseCaseError>(
+          () => ModelConstraintErrorOccurred(
+            PickingNotFound(),
+          ),
+        )
         .flatMap((picking) {
       return picking
           .process(CancelPicking(
             pickingId: pickingId,
             correlationId: correlationId,
           ))
+          .mapLeft(
+            ModelConstraintErrorOccurred.listOf,
+          )
           .toTaskEither();
     }).flatMap((cancelled) {
       final (picking, events) = cancelled;

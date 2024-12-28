@@ -1,3 +1,5 @@
+import 'package:backend/command/model/model_constraint_error.dart';
+
 sealed class PickingCommand {
   final String correlationId;
   final String pickingId;
@@ -8,7 +10,8 @@ sealed class PickingCommand {
   });
 }
 
-sealed class PickingCommandError {}
+sealed class PickingCommandError implements ModelConstraintError {
+}
 
 class OrderPicking extends PickingCommand {
   final String pickingOrderId;
@@ -24,9 +27,9 @@ class OrderPicking extends PickingCommand {
   });
 }
 
-class OrderPickingError implements PickingCommandError {}
+class OrderPickingError with EasyMessageForModelConstraintError implements PickingCommandError {}
 
-class PickingNotFound implements PickingCommandError {}
+class PickingNotFound with EasyMessageForModelConstraintError implements PickingCommandError {}
 
 class CancelPicking extends PickingCommand {
   CancelPicking({
@@ -35,4 +38,4 @@ class CancelPicking extends PickingCommand {
   });
 }
 
-class PickingAlreadyCancelled implements PickingCommandError {}
+class PickingAlreadyCancelled with EasyMessageForModelConstraintError implements PickingCommandError {}

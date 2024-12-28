@@ -3,10 +3,11 @@ import 'dart:math';
 import 'package:backend/command/model/picking/picking.dart';
 import 'package:backend/command/model/picking/repository.dart';
 import 'package:backend/command/model/picking_order/repository.dart';
-import 'package:backend/command/use_case/use_case_transaction.dart';
 import 'package:clock/clock.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:backend/command/model/picking_order/picking_order.dart';
+
+import 'command_use_case_transaction.dart';
 
 class SendPickingOrderUseCase {
   final PickingOrderRepository _pickingOrderRepository;
@@ -20,7 +21,7 @@ class SendPickingOrderUseCase {
   );
 
   TaskEither<List<dynamic>, ()> execute(
-    UseCaseTransaction transaction,
+    CommandUseCaseTransaction transaction,
     List<PickingItem> items, {
     required String correlationId,
   }) {

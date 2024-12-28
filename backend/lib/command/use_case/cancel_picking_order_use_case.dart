@@ -1,8 +1,8 @@
 import 'package:backend/command/model/picking_order/command.dart';
 import 'package:backend/command/model/picking_order/repository.dart';
-import 'package:backend/command/use_case/use_case_transaction.dart';
 import 'package:clock/clock.dart';
 import 'package:fpdart/fpdart.dart';
+import 'package:backend/command/use_case/command_use_case_transaction.dart';
 
 class CancelPickingOrderUseCase {
   final PickingOrderRepository _pickingOrderRepository;
@@ -15,7 +15,7 @@ class CancelPickingOrderUseCase {
   );
 
   TaskEither<List<dynamic>, ()> execute(
-    UseCaseTransaction transaction,
+    CommandUseCaseTransaction transaction,
     String pickingOrderId, {
     required String correlationId,
   }) {
